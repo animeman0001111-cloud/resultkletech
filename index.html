@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KLE Results Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{ background:#e9e9e9; }
+
+.wrapper{
+  width:900px;
+  margin:20px auto;
+  background:#fff;
+  border:1px solid #ccc;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 20px;
+  border-bottom:1px solid #ccc;
+}
+
+.logo{
+  font-size:18px;
+  font-weight:bold;
+  color:#b00000;
+}
+
+.subtext{
+  font-size:12px;
+  color:#777;
+}
+
+.title{
+  padding:10px 20px;
+  font-size:14px;
+  border-bottom:1px dashed #bbb;
+}
+
+.login-section{
+  display:flex;
+  justify-content:center;
+  padding:30px 0;
+}
+
+.login-box{
+  width:520px;
+  padding:25px;
+  color:white;
+  background:linear-gradient(to bottom, #b30000, #6e0000);
+  border:1px solid #5a0000;
+  box-shadow:0 8px 15px rgba(0,0,0,0.3);
+}
+
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.form-row label{
+  width:220px;
+}
+
+.form-row input{
+  flex:1;
+  padding:6px;
+}
+
+.captcha-row{
+  display:flex;
+  gap:8px;
+}
+
+canvas{
+  border:1px solid #ccc;
+  background:#fff;
+  cursor:pointer;
+}
+
+.buttons{
+  margin-left:220px;
+}
+
+.buttons button{
+  padding:6px 18px;
+  margin-right:10px;
+}
+
+#errorBox{
+  color:#ffcccc;
+  font-size:12px;
+  margin-left:220px;
+  display:none;
+}
+
+.footer{
+  background:#b00000;
+  color:#fff;
+  text-align:center;
+  padding:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="header">
+  <div>
+    <div class="logo">KLE Technological University</div>
+    <div class="subtext">Semester End Examination Results</div>
+  </div>
+</div>
+
+<div class="title">Odd Nov 2025 - Provisional Results</div>
+
+<div class="login-section">
+  <div class="login-box">
+
+    <div class="form-row">
+      <label>Enter SRN</label>
+      <input type="text" id="srn">
+    </div>
+
+    <div class="form-row">
+      <label>Security Code</label>
+      <div class="captcha-row">
+        <input type="text" id="captchaInput">
+        <canvas id="captchaCanvas" width="120" height="35"></canvas>
+        <button onclick="generateCaptcha()">↻</button>
+      </div>
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    <div id="errorBox"></div>
+
+    <div class="buttons">
+      <button onclick="checkResult()">Result</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">Contact Examination Section</div>
+
+</div>
+
+<script>
+
+let captchaValue = "";
+
+/* ✅ VALID SRNs (simulate database) */
+const validSRNs = [
+  "01FE25BCS272",
+  "01FE25BCS077",
+  "01FE21BCS003"
+];
+
+/* CAPTCHA */
+function generateCaptcha(){
+
+  const canvas = document.getElementById("captchaCanvas");
+  const ctx = canvas.getContext("2d");
+
+  document.getElementById("captchaInput").value = "";
+  document.getElementById("errorBox").style.display = "none";
+
+  ctx.clearRect(0,0,120,35);
+
+  captchaValue = "";
+
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  for(let i=0;i<6;i++){
+    captchaValue += chars[Math.floor(Math.random()*chars.length)];
+  }
+
+  console.log("CAPTCHA:", captchaValue);
+
+  // Background
+  let gradient = ctx.createLinearGradient(0,0,120,35);
+  gradient.addColorStop(0,"#f5f5f5");
+  gradient.addColorStop(1,"#e0e0e0");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0,0,120,35);
+
+  // Text
+  for(let i=0;i<captchaValue.length;i++){
+    let x = 10 + i*16;
+    let y = 25;
+
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate((Math.random()-0.5)*0.8);
+
+    ctx.font = (16 + Math.random()*5) + "px Arial";
+    ctx.fillStyle = `rgb(${Math.random()*150},${Math.random()*150},${Math.random()*150})`;
+
+    ctx.fillText(captchaValue[i],0,0);
+    ctx.restore();
+  }
+
+  // Noise lines
+  for(let i=0;i<2;i++){
+    ctx.beginPath();
+    ctx.moveTo(0, Math.random()*35);
+    ctx.lineTo(120, Math.random()*35);
+    ctx.stroke();
+  }
+
+  // Noise dots
+  for(let i=0;i<60;i++){
+    ctx.fillRect(Math.random()*120, Math.random()*35, 1, 1);
+  }
+}
+
+/* CLICK REFRESH */
+document.getElementById("captchaCanvas").addEventListener("click", generateCaptcha);
+
+/* HIDE ERROR WHEN TYPING */
+document.getElementById("captchaInput").addEventListener("input", () => {
+  document.getElementById("errorBox").style.display = "none";
+});
+
+/* VALIDATION */
+function validate(){
+
+  let srn = document.getElementById("srn").value.trim().toUpperCase();
+  let input = document.getElementById("captchaInput").value.toUpperCase();
+  let errorBox = document.getElementById("errorBox");
+
+  errorBox.style.display = "none";
+
+  if(srn === ""){
+    errorBox.innerText = "Enter SRN";
+    errorBox.style.display = "block";
+    return false;
+  }
+
+  /* SRN CHECK */
+  if(!validSRNs.includes(srn)){
+    errorBox.innerText = "Invalid SRN. Please check.";
+    errorBox.style.display = "block";
+    return false;
+  }
+
+  /* CAPTCHA CHECK */
+  if(input !== captchaValue){
+    errorBox.innerText = "Invalid Security Code.";
+    errorBox.style.display = "block";
+    generateCaptcha();
+    return false;
+  }
+
+  return true;
+}
+
+/* RESULT BUTTON */
+function checkResult(){
+  if(validate()){
+    // ✅ REDIRECT HERE
+    window.location.href = "https://kletech.vercel.app/";
+  }
+}
+
+/* INIT */
+generateCaptcha();
+
+</script>
+
+</body>
+</html>
